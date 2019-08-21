@@ -1,7 +1,3 @@
-type Query {
-  nothing: String!
-}
-
 type Mutation {
   createAccount(
     username: String!
