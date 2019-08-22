@@ -11,6 +11,24 @@ export default {
 
     fullName: parent => `${parent.firstName} ${parent.lastName}`,
 
+    postsCount: ({ id }) =>
+      prisma
+        .postsConnection({ where: { user: { id } } })
+        .aggregate()
+        .count(),
+
+    followingCount: ({ id }) =>
+      prisma
+        .usersConnection({ where: { followers_some: { id } } })
+        .aggregate()
+        .count(),
+
+    followersCount: ({ id }) =>
+      prisma
+        .usersConnection({ where: { following_some: { id } } })
+        .aggregate()
+        .count(),
+
     isFollowing: (parent, _, { request }) => {
       const { id: parentId } = parent;
       const { user } = request;
