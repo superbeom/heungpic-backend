@@ -31,6 +31,9 @@ type Post {
   files: [File!]!
   likes: [Like!]!
   comments: [Comment!]!
+  isLiked: Boolean!
+  likeCount: Int!
+  commentCount: Int!
   createdAt: String!
   updatedAt: String!
 }
