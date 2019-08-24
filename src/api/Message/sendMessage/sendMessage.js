@@ -5,7 +5,7 @@ export default {
     sendMessage: async (_, args, { request, isAuthenticated }) => {
       isAuthenticated(request);
       const { roomId, message, toId } = args;
-      const { user } = reqest;
+      const { user } = request;
       let room;
 
       if (roomId === undefined) {
@@ -23,6 +23,29 @@ export default {
       if (!room) {
         throw Error("Room not found");
       }
+
+      const getTo = room.participants.filter(
+        participant => participant.id !== user.id
+      )[0];
+
+      return prisma.createMessage({
+        text: message,
+        from: {
+          connect: {
+            id: user.id
+          }
+        },
+        to: {
+          connect: {
+            id: roomId ? getTo.id : toId
+          }
+        },
+        room: {
+          connect: {
+            id: room.id
+          }
+        }
+      });
     }
   }
 };
