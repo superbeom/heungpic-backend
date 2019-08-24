@@ -8,6 +8,7 @@ export default {
       const { user } = request;
 
       const canSee = await prisma.$exists.room({
+        id,
         participants_some: {
           id: user.id
         }
