@@ -4,48 +4,59 @@ export default {
   Mutation: {
     sendMessage: async (_, args, { request, isAuthenticated }) => {
       isAuthenticated(request);
-      const { roomId, message, toId } = args;
+      const { text, toId } = args;
       const { user } = request;
       let room;
-
-      if (roomId === undefined) {
-        if (user.id !== toId) {
-          room = await prisma.createRoom({
-            participants: {
-              connect: [{ id: user.id }, { id: toId }]
-            }
-          });
-        }
-      } else {
-        room = await prisma.room({ id: roomId });
-      }
-
-      if (!room) {
-        throw Error("Room not found");
-      }
-
-      const getTo = room.participants.filter(
-        participant => participant.id !== user.id
-      )[0];
-
-      return prisma.createMessage({
-        text: message,
+      const message = {
+        text,
         from: {
-          connect: {
-            id: user.id
-          }
+          connect: { id: user.id }
         },
         to: {
-          connect: {
-            id: roomId ? getTo.id : toId
-          }
-        },
-        room: {
-          connect: {
-            id: room.id
-          }
+          connect: { id: toId }
         }
+      };
+
+      // 둘(user.id와 toId) 사이에 이미 채팅방이 존재하는지 확인
+      const existRoom = await prisma.$exists.room({
+        AND: [
+          { participants_some: { id: user.id } },
+          { participants_some: { id: toId } }
+        ]
       });
+
+      if (existRoom) {
+        // 이미 채팅방이 존재하는 경우 - 채팅방 update
+        room = await prisma.user({ id: user.id }).rooms({
+          where: {
+            participants_some: { id: toId }
+          }
+        });
+        const roomId = room[0].id;
+
+        room = await prisma.updateRoom({
+          where: {
+            id: roomId
+          },
+          data: {
+            messages: {
+              create: message
+            }
+          }
+        });
+      } else {
+        // 채팅방이 존재하지 않는 경우 - 채팅방 create
+        room = await prisma.createRoom({
+          participants: {
+            connect: [{ id: user.id }, { id: toId }]
+          },
+          messages: {
+            create: message
+          }
+        });
+      }
+
+      return room;
     }
   }
 };
