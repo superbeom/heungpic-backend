@@ -7,11 +7,16 @@ export default {
       const { email } = args;
       const loginSecret = generateSecret();
       console.log(loginSecret);
+      const existUser = await prisma.$exists.user({ email });
 
       try {
-        await sendSecretMail(email, loginSecret);
-        await prisma.updateUser({ data: { loginSecret }, where: { email } });
-        return true;
+        if (existUser) {
+          await sendSecretMail(email, loginSecret);
+          await prisma.updateUser({ data: { loginSecret }, where: { email } });
+          return true;
+        } else {
+          throw Error("You don't have an account yet! Create One!!");
+        }
       } catch (error) {
         console.log(error);
         return false;
