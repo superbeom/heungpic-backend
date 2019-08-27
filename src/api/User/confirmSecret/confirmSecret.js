@@ -7,7 +7,10 @@ export default {
       const { email, secret } = args;
       const user = await prisma.user({ email });
 
+      console.log(secret);
+
       if (user.loginSecret === secret) {
+        console.log("일치");
         // JWT
         await prisma.updateUser({
           where: {
