@@ -9,7 +9,17 @@ export default {
     comments: ({ id }) => prisma.user({ id }).comments(),
     rooms: ({ id }) => prisma.user({ id }).rooms(),
 
-    fullName: parent => `${parent.firstName} ${parent.lastName}`,
+    fullName: parent => {
+      if (parent.firstName === null && parent.lastName !== null) {
+        return `${parent.lastName}`;
+      } else if (parent.firstName !== null && parent.lastName === null) {
+        return `${parent.firstName}`;
+      } else if (parent.firstName !== null && parent.lastName !== null) {
+        return `${parent.firstName} ${parent.lastName}`;
+      } else {
+        return "";
+      }
+    },
 
     postsCount: ({ id }) =>
       prisma
